@@ -7,10 +7,11 @@ import requests
 
 
 def top_ten(subreddit):
-    
-    #  /**Prints the titles of the first 10 hot posts listed for a given subreddit,
-    # If the subreddit is invalid, prints None.**/
-    
+    """
+    Prints the titles of the first 10 hot posts listed for a given subreddit.
+    If the subreddit is invalid, prints None.
+
+    """
     if not subreddit or not isinstance(subreddit, str):
         print("None")
         return
@@ -19,6 +20,7 @@ def top_ten(subreddit):
     headers = {
         "User-Agent": "linux:api_advanced:v1.0.0 (by /u/custom_user)"
     }
+    # Limit to 10 posts to retrieve only the necessary amount of data
     params = {"limit": 10}
 
     try:
@@ -27,7 +29,7 @@ def top_ten(subreddit):
         if response.status_code == 200:
             data = response.json()
             children = data.get("data", {}).get("children", [])
-            for child in children:
+            for child in children[:10]:
                 print(child.get("data", {}).get("title"))
         else:
             print("None")
