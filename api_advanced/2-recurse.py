@@ -1,27 +1,28 @@
 #!/usr/bin/python3
-"""Module to recursively query Reddit API for all hot article titles."""
+"""Module that recursively collects the titles of all hot posts."""
 import requests
 
 
-def recurse(subreddit, hot_list=[], after=None):
-    """Return a list of titles of all hot articles for a given subreddit."""
-    url = "https://www.reddit.com/r/{}/hot.json".format(subreddit)
-    headers = {"User-Agent": "Mozilla/5.0 (custom) api_advanced/1.0"}
-    params = {"limit": 100}
-    if after:
-        params["after"] = after
-    response = requests.get(
-        url, headers=headers, params=params, allow_redirects=False
-    )
-    if response.status_code != 200:
+def recurse(subreddit, hot_list=None, after=None):
+    """Return a list of all hot post titles, or None if invalid."""
+    if hot_list is None:
+        hot_list = []
+    if not subreddit or not isinstance(subreddit, str):
         return None
-    data = response.json().get("data", {})
-    posts = data.get("children", [])
-    if not posts:
+    url = "https://www.reddit.com/r/{}/hot.json".format(subreddit)
+    headers = {"User-Agent": "linux:alu-scripting:v1.0 (by /u/your_username)"}
+    params = {"limit": 100, "after": after}
+    try:
+        res = requests.get(url, headers=headers, params=params,
+                           allow_redirects=False, timeout=10)
+        if res.status_code != 200:
+            return hot_list if hot_list else None
+        data = res.json().get("data", {})
+    except (requests.RequestException, ValueError):
         return hot_list if hot_list else None
-    for post in posts:
-        hot_list.append(post.get("data", {}).get("title"))
-    next_after = data.get("after")
-    if next_after is None:
+    for child in data.get("children", []):
+        hot_list.append(child.get("data", {}).get("title"))
+    after = data.get("after")
+    if after is None:
         return hot_list
-    return recurse(subreddit, hot_list, next_after)
+    return recurse(subreddit, hot_list, after)
